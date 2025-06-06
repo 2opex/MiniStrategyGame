@@ -1,4 +1,5 @@
-﻿using GameLogic.Models;
+﻿using GameLogic.Enums;
+using GameLogic.Models;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -21,6 +22,7 @@ namespace GameLogic
         int Turns { get; }
         bool GameFinished { get; }
         IReadOnlyCollection<string> Messages { get; }
+        WeatherType Weather { get; } // 新增天氣屬性
         (bool IsEnough, int Comsumption) IsFoodEnough(int farmers, int soldiers, int builders);
     }
 
@@ -43,6 +45,7 @@ namespace GameLogic
         public int BuildingCompletedCount { get; set; }
         public int Turns { get; set; }
         public bool GameFinished { get; set; }
+        public WeatherType Weather { get; set; } // 新增天氣屬性
 
         // 使用物件列表來管理角色和敵人
         public List<PlayerRole> PlayerRoles { get; } = new List<PlayerRole>();

@@ -32,6 +32,8 @@ namespace GameInterface
         private NumericUpDown nudRecruitSoldier;
         private NumericUpDown nudRecruitBuilder;
         private NumericUpDown nudRecruitFarmer;
+        private System.Windows.Forms.RichTextBox rtbMessageLog;
+        private System.Windows.Forms.Label lblWeather;
 
         private void InitializeComponent()
         {
@@ -76,6 +78,28 @@ namespace GameInterface
             ((System.ComponentModel.ISupportInitialize)(this.nudRecruitBuilder)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudRecruitFarmer)).BeginInit();
             this.SuspendLayout();
+            // 
+            // rtbMessageLog
+            // 
+            this.rtbMessageLog = new System.Windows.Forms.RichTextBox();
+            this.rtbMessageLog.Location = new System.Drawing.Point(380, 193);
+            this.rtbMessageLog.Name = "rtbMessageLog";
+            this.rtbMessageLog.ReadOnly = true;
+            this.rtbMessageLog.Size = new System.Drawing.Size(320, 150);
+            this.rtbMessageLog.TabIndex = 24;
+            this.rtbMessageLog.Text = "";
+            this.rtbMessageLog.BackColor = System.Drawing.Color.Linen;
+            // 
+            // lblWeather
+            // 
+            this.lblWeather = new System.Windows.Forms.Label();
+            this.lblWeather.Location = new System.Drawing.Point(444, 92);
+            this.lblWeather.Name = "lblWeather";
+            this.lblWeather.Size = new System.Drawing.Size(150, 30);
+            this.lblWeather.TabIndex = 25;
+            this.lblWeather.Text = "晴天";
+            this.lblWeather.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.lblWeather.Font = new System.Drawing.Font("微軟正黑體", 9F, System.Drawing.FontStyle.Bold);
             // 
             // lblTurn
             // 
@@ -337,6 +361,8 @@ namespace GameInterface
             this.Controls.Add(this.pbBuildings);
             this.Controls.Add(this.lblFoesCount);
             this.Controls.Add(this.btnNextTurn);
+            this.Controls.Add(this.rtbMessageLog);
+            this.Controls.Add(this.lblWeather);
             this.Name = "GameForm";
             this.Text = "回合制遊戲 UI";
             ((System.ComponentModel.ISupportInitialize)(this.nudFarmer)).EndInit();
@@ -353,6 +379,8 @@ namespace GameInterface
             ((System.ComponentModel.ISupportInitialize)(this.pbBuildings)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudFoodConsumption)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudRecruitSoldier)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudRecruitBuilder)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudRecruitFarmer)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudRecruitBuilder)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudRecruitFarmer)).EndInit();
             this.ResumeLayout(false);

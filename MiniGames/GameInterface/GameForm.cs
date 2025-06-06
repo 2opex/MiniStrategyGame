@@ -8,25 +8,25 @@ namespace GameInterface
 {
     public partial class GameForm : Form
     {
-        private readonly IGameContext _gameContext;
-        private readonly TurnProcessor _turnProcessor;
+        private readonly IGameContext gameContext;
+        private readonly TurnProcessor turnProcessor;
 
         private GameForm()
         {
-            InitializeComponent(); // 這裡會呼叫 `GameForm.Designer.cs` 中的 UI 初始化
+            InitializeComponent();
         }
 
         public GameForm(TurnProcessor processor) : this()
         {
-            this._turnProcessor = processor;
-            this._gameContext = _turnProcessor.GameContext;
+            this.turnProcessor = processor;
+            this.gameContext = turnProcessor.GameContext;
             UpdateUi();
             this.btnNextTurn.Click += BtnNextTurn_Click;
         }
 
         private void Recruit_ValueChanged(object sender, EventArgs e)
         {
-            var result = _gameContext.IsFoodEnough((int)nudRecruitFarmer.Value, (int)nudRecruitSoldier.Value,
+            var result = gameContext.IsFoodEnough((int)nudRecruitFarmer.Value, (int)nudRecruitSoldier.Value,
                 (int)nudRecruitBuilder.Value);
             if (result.IsEnough)
                 nudFoodConsumption.ForeColor = Color.Black;
@@ -72,7 +72,7 @@ namespace GameInterface
                     return;
                 }
 
-                _turnProcessor.TurnStart(new TurnProcessor.UserInput(recruitCheck.recruitedFarmers,
+                turnProcessor.TurnStart(new TurnProcessor.UserInput(recruitCheck.recruitedFarmers,
                     recruitCheck.recruitedSoldiers, recruitCheck.recruitedBuilders, isFullyDistributed.Farmers,
                     isFullyDistributed.Soldiers, isFullyDistributed.Builders));
                 UpdateUi();
@@ -91,8 +91,8 @@ namespace GameInterface
             var farmers = (int)this.nudRecruitFarmer.Value;
             var soldiers = (int)this.nudRecruitSoldier.Value;
             var builders = (int)this.nudRecruitBuilder.Value;
-            var result = _gameContext.IsFoodEnough(farmers, soldiers, builders);
-            return (result.IsEnough, _gameContext.Food - result.Comsumption, farmers, soldiers, builders);
+            var result = gameContext.IsFoodEnough(farmers, soldiers, builders);
+            return (result.IsEnough, gameContext.Food - result.Comsumption, farmers, soldiers, builders);
         }
 
         private (bool IsFullyDistributed, int Farmers, int Soldiers, int Builders) IsRolesFullyDistributed()
@@ -115,17 +115,41 @@ namespace GameInterface
                 this.nudRecruitSoldier.ValueChanged -= Recruit_ValueChanged;
                 this.nudRecruitBuilder.ValueChanged -= Recruit_ValueChanged;
 
-                this.nudFarmer.Value = _gameContext.FarmersCount;
-                this.nudSoldier.Value = _gameContext.SoldiersCount;
-                this.nudBuilder.Value = _gameContext.BuildersCount;
-                this.lblFoesCount.Text = _gameContext.FoesCount.ToString();
-                this.lblFood.Text = _gameContext.Food.ToString();
-                this.lblBeds.Text = _gameContext.Beds.ToString();
-                this.lblBuildings.Text = _gameContext.BuildingCompletedCount.ToString();
-                this.lblTurn.Text = _gameContext.Turns.ToString();
+                // 更新數值
+                this.nudFarmer.Value = gameContext.FarmersCount;
+                this.nudSoldier.Value = gameContext.SoldiersCount;
+                this.nudBuilder.Value = gameContext.BuildersCount;
+                this.lblFoesCount.Text = gameContext.FoesCount.ToString();
+                this.lblFood.Text = gameContext.Food.ToString();
+                this.lblBeds.Text = gameContext.Beds.ToString();
+                this.lblBuildings.Text = gameContext.BuildingCompletedCount.ToString();
+                this.lblTurn.Text = gameContext.Turns.ToString();
+                this.lblWeather.Text = $"天氣: {gameContext.Weather}"; // 更新天氣
+
+                // 更新剩餘人口
+                this.nudRemain.Value = gameContext.RolesCount - (this.nudFarmer.Value + this.nudSoldier.Value + this.nudBuilder.Value);
+
+                // 更新 Tag
                 this.nudFarmer.Tag = this.nudFarmer.Value;
                 this.nudSoldier.Tag = this.nudSoldier.Value;
                 this.nudBuilder.Tag = this.nudBuilder.Value;
+
+                // 更新訊息日誌
+                this.rtbMessageLog.Clear();
+                foreach (var message in gameContext.Messages)
+                {
+                    this.rtbMessageLog.AppendText(message + "\n");
+                }
+                // 自動捲動到最下方
+                this.rtbMessageLog.SelectionStart = this.rtbMessageLog.Text.Length;
+                this.rtbMessageLog.ScrollToCaret();
+
+                // 檢查遊戲是否結束
+                if (gameContext.GameFinished)
+                {
+                    this.btnNextTurn.Enabled = false;
+                    this.btnNextTurn.Text = "遊戲結束";
+                }
             }
             finally
             {

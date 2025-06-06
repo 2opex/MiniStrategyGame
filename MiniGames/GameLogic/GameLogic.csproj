@@ -43,7 +43,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Enums\WeatherType.cs" />
     <Compile Include="GameContext.cs" />
+    <Compile Include="Models\Builder.cs" />
+    <Compile Include="Models\Farmer.cs" />
+    <Compile Include="Models\Foe.cs" />
+    <Compile Include="Models\FoodThief.cs" />
+    <Compile Include="Models\HouseBreaker.cs" />
+    <Compile Include="Models\NormalFoe.cs" />
+    <Compile Include="Models\PlayerRole.cs" />
+    <Compile Include="Models\RelicHolder.cs" />
+    <Compile Include="Models\ResourcePacket.cs" />
+    <Compile Include="Models\Soldier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Manager\TurnProcessor.cs" />
   </ItemGroup>

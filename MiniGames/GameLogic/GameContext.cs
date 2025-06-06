@@ -21,6 +21,8 @@ namespace GameLogic
         int FoesCount { get; }
         int Turns { get; }
         bool GameFinished { get; }
+        bool HasRelic { get; } // 新增：是否已獲得聖物
+        bool IsRelicActive { get; } // 新增：聖物效果是否已啟動
         IReadOnlyCollection<string> Messages { get; }
         WeatherType Weather { get; } // 新增天氣屬性
         (bool IsEnough, int Comsumption) IsFoodEnough(int farmers, int soldiers, int builders);
@@ -45,11 +47,13 @@ namespace GameLogic
         public int BuildingCompletedCount { get; set; }
         public int Turns { get; set; }
         public bool GameFinished { get; set; }
+        public bool HasRelic { get; set; } // 新增：是否已獲得聖物
+        public bool IsRelicActive { get; set; } // 新增：聖物效果是否已啟動
         public WeatherType Weather { get; set; } // 新增天氣屬性
 
         // 使用物件列表來管理角色和敵人
-        public List<PlayerRole> PlayerRoles { get; } = new List<PlayerRole>();
-        public List<Foe> Foes { get; } = new List<Foe>();
+        public List<PlayerRole> PlayerRoles { get; } = [];
+        public List<Foe> Foes { get; } = [];
 
         // 為了相容 UI，保留計數屬性，但改為從列表中動態計算
         public int RolesCount => PlayerRoles.Count;
@@ -59,10 +63,10 @@ namespace GameLogic
         public int FoesCount => Foes.Count;
 
         // --- 訊息相關 ---
-        private readonly List<string> _messages = new List<string>();
-        public IReadOnlyCollection<string> Messages => _messages;
-        public void AddMessage(string message) => _messages.Add(message);
-        public void ClearMessages() => _messages.Clear();
+        private readonly List<string> messages = [];
+        public IReadOnlyCollection<string> Messages => messages;
+        public void AddMessage(string message) => messages.Add(message);
+        public void ClearMessages() => messages.Clear();
 
         // --- 招募檢查 ---
         public (bool IsEnough, int Comsumption) IsFoodEnough(int farmers, int soldiers, int builders)

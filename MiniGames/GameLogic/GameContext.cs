@@ -15,8 +15,6 @@ namespace GameLogic
         int Beds { get; }
         int BuildingCompletedCount { get; }
         int RolesCount { get; }
-        int FarmersCount { get; }
-        int SoldiersCount { get; }
         int BuildersCount { get; }
         int FoesCount { get; }
         int Turns { get; }
@@ -25,7 +23,11 @@ namespace GameLogic
         bool IsRelicActive { get; } // 新增：聖物效果是否已啟動
         IReadOnlyCollection<string> Messages { get; }
         WeatherType Weather { get; } // 新增天氣屬性
-        (bool IsEnough, int Comsumption) IsFoodEnough(int farmers, int soldiers, int builders);
+        int FarmersCount { get; }
+        int WheatFarmersCount { get; } // 新增
+        int RiceFarmersCount { get; }  // 新增
+        int SoldiersCount { get; }
+        (bool IsEnough, int Comsumption) IsFoodEnough(int farmers, int wheatFarmers, int riceFarmers, int soldiers, int builders); // 修改簽名
     }
 
     /// <summary>
@@ -51,16 +53,20 @@ namespace GameLogic
         public bool IsRelicActive { get; set; } // 新增：聖物效果是否已啟動
         public WeatherType Weather { get; set; } // 新增天氣屬性
 
-        // 使用物件列表來管理角色和敵人
+        public List<Crop> PlantedCrops { get; internal set; } = new List<Crop>(); // 新增作物列表
+
         public List<PlayerRole> PlayerRoles { get; } = [];
         public List<Foe> Foes { get; } = [];
 
         // 為了相容 UI，保留計數屬性，但改為從列表中動態計算
         public int RolesCount => PlayerRoles.Count;
-        public int FarmersCount => PlayerRoles.OfType<Farmer>().Count();
-        public int SoldiersCount => PlayerRoles.OfType<Soldier>().Count();
         public int BuildersCount => PlayerRoles.OfType<Builder>().Count();
         public int FoesCount => Foes.Count;
+
+        public int FarmersCount => PlayerRoles.OfType<Farmer>().Count();
+        public int WheatFarmersCount => PlayerRoles.OfType<WheatFarmer>().Count(); // 新增
+        public int RiceFarmersCount => PlayerRoles.OfType<RiceFarmer>().Count();   // 新增
+        public int SoldiersCount => PlayerRoles.OfType<Soldier>().Count();
 
         // --- 訊息相關 ---
         private readonly List<string> messages = [];
@@ -68,10 +74,13 @@ namespace GameLogic
         public void AddMessage(string message) => messages.Add(message);
         public void ClearMessages() => messages.Clear();
 
-        // --- 招募檢查 ---
-        public (bool IsEnough, int Comsumption) IsFoodEnough(int farmers, int soldiers, int builders)
+        // 修改 IsFoodEnough 來包含新的農夫類型
+        public (bool IsEnough, int Comsumption) IsFoodEnough(int farmers, int wheatFarmers, int riceFarmers, int soldiers, int builders)
         {
+            // 根據需求，所有農夫的招募成本都與其消耗掛鉤 (消耗1，成本2)
             var totalCost = (farmers * FarmerRecruitCost) +
+                            (wheatFarmers * FarmerRecruitCost) + // 新增
+                            (riceFarmers * FarmerRecruitCost) +  // 新增
                             (soldiers * SoldierRecruitCost) +
                             (builders * BuilderRecruitCost);
             return (Food >= totalCost, totalCost);

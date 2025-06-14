@@ -1,4 +1,5 @@
-﻿namespace GameLogic.Models
+﻿// 檔案路徑: MiniGames/GameLogic/Models/Farmer.cs
+namespace GameLogic.Models
 {
     /// <summary>
     /// 代表農夫的類別。
@@ -12,8 +13,8 @@
 
         public override ResourcePacket PerformProduction(IGameContext context)
         {
-            // 回傳一個只包含食物的資源包裹
-            return new ResourcePacket { Food = 2 };
+            // 生產邏輯已移至 TurnProcessor，此處回傳空包裹
+            return new ResourcePacket();
         }
     }
 }

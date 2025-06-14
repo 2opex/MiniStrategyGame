@@ -98,53 +98,103 @@ namespace GameLogic.Manager
             double costMultiplier = 1.0;
             if (gameContext.Weather == WeatherType.ScorchingSummer)
             {
-                costMultiplier = 1.5; // 炎夏成本變為 1.5 倍
+                costMultiplier = 1.5;
                 gameContext.AddMessage("天氣炎熱，招募成本變為 1.5 倍！");
             }
 
-            var recruitCost = (int)(((userInput.RecruitedFarmers * 2) + (userInput.RecruitedBuilders * 4) + (userInput.RecruitedSoldiers * 6)) * costMultiplier);
+            // 農夫的招募成本都一樣 (消耗1，成本2)
+            var recruitCost = (int)(((userInput.RecruitedFarmers * 2) +
+                                     (userInput.RecruitedWheatFarmers * 2) + // 新增
+                                     (userInput.RecruitedRiceFarmers * 2) +  // 新增
+                                     (userInput.RecruitedBuilders * 4) +
+                                     (userInput.RecruitedSoldiers * 6)) * costMultiplier);
             gameContext.Food -= recruitCost;
 
             for (int i = 0; i < userInput.RecruitedFarmers; i++) gameContext.PlayerRoles.Add(new Farmer());
+            for (int i = 0; i < userInput.RecruitedWheatFarmers; i++) gameContext.PlayerRoles.Add(new WheatFarmer()); // 新增
+            for (int i = 0; i < userInput.RecruitedRiceFarmers; i++) gameContext.PlayerRoles.Add(new RiceFarmer());   // 新增
             for (int i = 0; i < userInput.RecruitedBuilders; i++) gameContext.PlayerRoles.Add(new Builder());
             for (int i = 0; i < userInput.RecruitedSoldiers; i++) gameContext.PlayerRoles.Add(new Soldier());
 
-            gameContext.AddMessage($"招募了 {userInput.RecruitedFarmers} 農夫, {userInput.RecruitedBuilders} 建築師, {userInput.RecruitedSoldiers} 士兵。");
+            gameContext.AddMessage($"招募了 {userInput.RecruitedFarmers} 農夫, {userInput.RecruitedWheatFarmers} 小麥農夫, {userInput.RecruitedRiceFarmers} 稻米農夫, {userInput.RecruitedBuilders} 建築師, {userInput.RecruitedSoldiers} 士兵。");
             gameContext.AddMessage($"花費了 {recruitCost} 食物。");
         }
 
+
         private void ProcessProduction()
         {
-            int foodProduced = 0;
+            int foodFromHarvest = 0;
             int buildingsConstructed = 0;
+            var harvestedCrops = new List<Crop>();
 
-            foreach (var role in gameContext.PlayerRoles)
+            // --- 階段 4.1: 作物生長與收成 ---
+            gameContext.AddMessage("--- 作物生長報告 ---");
+            foreach (var crop in gameContext.PlantedCrops)
             {
-                var production = role.PerformProduction(gameContext);
-
-                // 檢查寒冬對食物產量的影響
-                if (gameContext.Weather == WeatherType.ColdWinter && production.Food > 0)
+                // 處理寒冬對水稻的影響
+                if (crop.Type == CropType.Rice && gameContext.Weather == WeatherType.ColdWinter)
                 {
-                    production.Food /= 2; // 食物產量減半
+                    crop.IsStalled = true;
+                    gameContext.AddMessage("寒冬來臨，水稻停止生長。");
+                    continue; // 跳過此作物的後續處理
                 }
 
-                foodProduced += production.Food;
+                crop.IsStalled = false; // 如果不是寒冬，確保作物正常生長
+                crop.TurnsGrown++;
+
+                if (crop.IsMature)
+                {
+                    int finalYield = crop.Yield;
+                    // 處理寒冬對一般作物的影響
+                    if (crop.Type == CropType.General && gameContext.Weather == WeatherType.ColdWinter)
+                    {
+                        finalYield /= 2;
+                        gameContext.AddMessage($"寒冬影響，一份 {crop.Type} 作物收成減半為 {finalYield} 食物。");
+                    }
+                    else
+                    {
+                        gameContext.AddMessage($"一份 {crop.Type} 作物成熟了！收穫 {finalYield} 食物。");
+                    }
+                    foodFromHarvest += finalYield;
+                    harvestedCrops.Add(crop);
+                }
+                else
+                {
+                    gameContext.AddMessage($"一份 {crop.Type} 作物正在生長... ({crop.TurnsGrown}/{crop.GrowthTime})");
+                }
+            }
+
+            // 將已收成的作物從列表中移除
+            harvestedCrops.ForEach(c => gameContext.PlantedCrops.Remove(c));
+
+            // --- 階段 4.2: 非農夫角色生產 (例如建築師) ---
+            foreach (var role in gameContext.PlayerRoles.Where(r => !(r is Farmer || r is WheatFarmer || r is RiceFarmer)))
+            {
+                var production = role.PerformProduction(gameContext);
                 buildingsConstructed += production.Buildings;
             }
 
-            if (gameContext.Weather == WeatherType.ColdWinter && foodProduced > 0)
+            // --- 階段 4.3: 農夫種植新作物 ---
+            foreach (var farmer in gameContext.PlayerRoles.OfType<Farmer>())
             {
-                gameContext.AddMessage("寒冬來臨，作物收成不佳，食物產量減半！");
+                gameContext.PlantedCrops.Add(new Crop(CropType.General, gameContext.Turns));
+            }
+            foreach (var wheatFarmer in gameContext.PlayerRoles.OfType<WheatFarmer>())
+            {
+                gameContext.PlantedCrops.Add(new Crop(CropType.Wheat, gameContext.Turns));
+            }
+            foreach (var riceFarmer in gameContext.PlayerRoles.OfType<RiceFarmer>())
+            {
+                gameContext.PlantedCrops.Add(new Crop(CropType.Rice, gameContext.Turns));
             }
 
-            gameContext.Food += foodProduced;
+            // --- 階段 4.4: 結算資源 ---
+            gameContext.Food += foodFromHarvest;
             gameContext.BuildingCompletedCount += buildingsConstructed;
             UpdateBeds();
 
-            gameContext.AddMessage($"生產結算：獲得 {foodProduced} 食物，建造 {buildingsConstructed} 棟房屋。");
+            gameContext.AddMessage($"生產結算：共收穫 {foodFromHarvest} 食物，建造 {buildingsConstructed} 棟房屋。");
         }
-
-        // --- 以下方法與上一版相同，保持不變 ---
 
         private void ProcessConsumption()
         {
@@ -331,6 +381,8 @@ namespace GameLogic.Manager
 
         public readonly struct UserInput(
             int recruitedFarmers,
+            int recruitedWheatFarmers, // 新增
+            int recruitedRiceFarmers,  // 新增
             int recruitedSoldiers,
             int recruitedBuilders,
             int adjustedFarmers,
@@ -338,6 +390,8 @@ namespace GameLogic.Manager
             int adjustedBuilders)
         {
             public int RecruitedFarmers { get; } = recruitedFarmers;
+            public int RecruitedWheatFarmers { get; } = recruitedWheatFarmers; // 新增
+            public int RecruitedRiceFarmers { get; } = recruitedRiceFarmers;   // 新增
             public int RecruitedSoldiers { get; } = recruitedSoldiers;
             public int RecruitedBuilders { get; } = recruitedBuilders;
             public int AdjustedFarmers { get; } = adjustedFarmers;

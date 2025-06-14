@@ -167,11 +167,9 @@ namespace GameLogic.Manager
             // 將已收成的作物從列表中移除
             harvestedCrops.ForEach(c => gameContext.PlantedCrops.Remove(c));
 
-            // --- 階段 4.2: 非農夫角色生產 (例如建築師) ---
-            foreach (var role in gameContext.PlayerRoles.Where(r => !(r is Farmer || r is WheatFarmer || r is RiceFarmer)))
+            foreach (var role in gameContext.PlayerRoles.OfType<IBuild>())
             {
-                var production = role.PerformProduction(gameContext);
-                buildingsConstructed += production.Buildings;
+                buildingsConstructed += role.Build();
             }
 
             // --- 階段 4.3: 農夫種植新作物 ---

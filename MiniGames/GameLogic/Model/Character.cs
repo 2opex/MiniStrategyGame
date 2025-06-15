@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GameLogic.Interface;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,18 +31,13 @@ namespace GameLogic.Model
     /// <summary>
     /// 農夫
     /// </summary>
-    public abstract class Farmer : Role
+    public abstract class Farmer : Role, IPlanter
     {
         public override int FoodConsumption => 1;
 
         /// 農夫正在照料的作物
         /// </summary>
         public Crop TendedCrop { get; set; }
-
-        /// <summary>
-        /// 根據農夫類型，建立對應的農作物實例
-        /// </summary>
-        public abstract Crop CreateCrop();
     }
 
     /// <summary>
@@ -49,7 +45,6 @@ namespace GameLogic.Model
     /// </summary>
     public class GenericFarmer : Farmer
     {
-        public override Crop CreateCrop() => new GeneralCrop();
     }
 
     /// <summary>
@@ -57,7 +52,6 @@ namespace GameLogic.Model
     /// </summary>
     public class WheatFarmer : Farmer
     {
-        public override Crop CreateCrop() => new Wheat();
     }
 
     /// <summary>
@@ -65,7 +59,6 @@ namespace GameLogic.Model
     /// </summary>
     public class RiceFarmer : Farmer
     {
-        public override Crop CreateCrop() => new Rice();
     }
 
     /// <summary>

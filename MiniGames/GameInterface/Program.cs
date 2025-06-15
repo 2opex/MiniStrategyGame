@@ -17,7 +17,7 @@ namespace GameInterface
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            var initialSetting = new TurnProcessor.InitialSettingUps(10, 10, 10, 5, 1, 0);
+            var initialSetting = new TurnProcessor.InitialSettingUps(10, 10, 10, 10, 10, 5, 1, 0);
             var turnManager = new TurnProcessor(initialSetting);
             Application.Run(new GameForm(turnManager));
         }

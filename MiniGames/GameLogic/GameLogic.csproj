@@ -45,8 +45,13 @@
   <ItemGroup>
     <Compile Include="GameContext.cs" />
     <Compile Include="Interface\IGameContext.cs" />
+    <Compile Include="Interface\IPlanter.cs" />
     <Compile Include="Interface\ITurnPhase.cs" />
+    <Compile Include="Manager\CropFactory.cs" />
     <Compile Include="Model\Character.cs" />
+    <Compile Include="Model\Crop.cs" />
+    <Compile Include="Model\Enemy.cs" />
+    <Compile Include="Model\Relic.cs" />
     <Compile Include="Phase\PhaseImplementations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Manager\TurnProcessor.cs" />

@@ -1,5 +1,5 @@
-﻿using GameAbstract;
-using GameAbstract.Enum;
+﻿using GameAbstract.Enum;
+using GameLogic.Interface;
 using GameLogic.Manager;
 using GameLogic.Model;
 using System.Collections.Generic;
@@ -23,12 +23,15 @@ namespace GameLogic
         public bool GameFinished { get; set; }
         public WeatherType Weather { get; set; }
 
-        private readonly List<string> _messages = new List<string>();
+        private readonly List<string> _messages = [];
         public IReadOnlyCollection<string> Messages => _messages.AsReadOnly();
 
-        internal List<Farmer> Farmers { get; } = new List<Farmer>();
-        internal List<Soldier> Soldiers { get; } = new List<Soldier>();
-        internal List<Builder> Builders { get; } = new List<Builder>();
+        internal List<Farmer> Farmers { get; } = [];
+        internal List<Soldier> Soldiers { get; } = [];
+        internal List<Builder> Builders { get; } = [];
+
+        internal TurnProcessor.UserInput CurrentUserInput { get; set; }
+
 
         public GameContext(TurnProcessor.InitialSettingUps initial)
         {

@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using GameLogic;
+using GameLogic.Interface;
 using GameLogic.Manager;
 
 namespace GameInterface
@@ -26,14 +27,14 @@ namespace GameInterface
 
         private void Recruit_ValueChanged(object sender, EventArgs e)
         {
-            var result = _gameContext.IsFoodEnough((int)nudRecruitFarmer.Value, (int)nudRecruitSoldier.Value,
+            var (IsEnough, Comsumption) = _gameContext.IsFoodEnough((int)nudRecruitFarmer.Value, (int)nudRecruitSoldier.Value,
                 (int)nudRecruitBuilder.Value);
-            if (result.IsEnough)
+            if (IsEnough)
                 nudFoodConsumption.ForeColor = Color.Black;
             else
                 nudFoodConsumption.ForeColor = Color.Red;
 
-            nudFoodConsumption.Value = result.Comsumption;
+            nudFoodConsumption.Value = Comsumption;
         }
 
         private void NudRole_ValueChanged(object sender, EventArgs e)
@@ -54,27 +55,27 @@ namespace GameInterface
                 this.nudRecruitFarmer.ReadOnly =
                     this.nudRecruitSoldier.ReadOnly = this.nudRecruitBuilder.ReadOnly = true;
 
-                var recruitCheck = CheckBeforeRecruit();
-                if (recruitCheck.IsFoodEnough)
+                var (IsFoodEnough, Shortfall, recruitedFarmers, recruitedSoldiers, recruitedBuilders) = CheckBeforeRecruit();
+                if (IsFoodEnough)
                 {
                     this.nudRecruitFarmer.Value = this.nudRecruitSoldier.Value = this.nudRecruitBuilder.Value = 0;
                 }
                 else
                 {
-                    MessageBox.Show($@"糧食不足，缺少 {recruitCheck.Shortfall} 單位");
+                    MessageBox.Show($@"糧食不足，缺少 {Shortfall} 單位");
                     return;
                 }
 
-                var isFullyDistributed = IsRolesFullyDistributed();
-                if (!isFullyDistributed.IsFullyDistributed)
+                var (IsFullyDistributed, Farmers, Soldiers, Builders) = IsRolesFullyDistributed();
+                if (!IsFullyDistributed)
                 {
                     MessageBox.Show(@"調整角色數量尚未完成");
                     return;
                 }
 
-                _turnProcessor.TurnStart(new TurnProcessor.UserInput(recruitCheck.recruitedFarmers,
-                    recruitCheck.recruitedSoldiers, recruitCheck.recruitedBuilders, isFullyDistributed.Farmers,
-                    isFullyDistributed.Soldiers, isFullyDistributed.Builders));
+                _turnProcessor.TurnStart(new TurnProcessor.UserInput(recruitedFarmers,
+                    recruitedSoldiers, recruitedBuilders, Farmers,
+                    Soldiers, Builders));
                 UpdateUi();
             }
             finally
@@ -91,8 +92,8 @@ namespace GameInterface
             var farmers = (int)this.nudRecruitFarmer.Value;
             var soldiers = (int)this.nudRecruitSoldier.Value;
             var builders = (int)this.nudRecruitBuilder.Value;
-            var result = _gameContext.IsFoodEnough(farmers, soldiers, builders);
-            return (result.IsEnough, _gameContext.Food - result.Comsumption, farmers, soldiers, builders);
+            var (IsEnough, Comsumption) = _gameContext.IsFoodEnough(farmers, soldiers, builders);
+            return (IsEnough, _gameContext.Food - Comsumption, farmers, soldiers, builders);
         }
 
         private (bool IsFullyDistributed, int Farmers, int Soldiers, int Builders) IsRolesFullyDistributed()

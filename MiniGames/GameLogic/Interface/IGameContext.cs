@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GameAbstract
+namespace GameLogic.Interface
 {
     /// <summary>
     /// 提供給 UI 層使用的遊戲狀態唯讀介面

@@ -24,7 +24,7 @@ namespace GameLogic.Interface
         bool GameFinished { get; }
         WeatherType Weather { get; }
         IReadOnlyCollection<string> Messages { get; }
-        (bool IsEnough, int Comsumption) IsFoodEnough(int farmers, int soldiers, int builders);
+        (bool IsEnough, int Comsumption) IsFoodEnough(int newGeneric, int newWheat, int newRice, int newSoldiers, int newBuilders);
     }
 
 }

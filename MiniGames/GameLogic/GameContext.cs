@@ -18,7 +18,8 @@ namespace GameLogic
         public int FarmersCount => Farmers.Count;
         public int SoldiersCount => Soldiers.Count;
         public int BuildersCount => Builders.Count;
-        public int FoesCount { get; set; }
+        public int FoesCount => Enemies.Count;
+        internal List<Enemy> Enemies { get; } = [];
         public int Turns { get; set; }
         public bool GameFinished { get; set; }
         public WeatherType Weather { get; set; }
@@ -29,31 +30,36 @@ namespace GameLogic
         internal List<Farmer> Farmers { get; } = [];
         internal List<Soldier> Soldiers { get; } = [];
         internal List<Builder> Builders { get; } = [];
+        internal List<Relic> ActiveRelics { get; } = [];
+        internal List<Relic> PendingRelics { get; } = [];
 
         internal TurnProcessor.UserInput CurrentUserInput { get; set; }
 
 
         public GameContext(TurnProcessor.InitialSettingUps initial)
         {
-            this.Food = initial.Food;
-            this.BuildingCompletedCount = initial.Buildings;
-            this.Beds = this.BuildingCompletedCount * 2;
-            for (int i = 0; i < initial.Farmers; i++) Farmers.Add(new Farmer());
+            Food = initial.Food;
+            BuildingCompletedCount = initial.Buildings;
+            Beds = BuildingCompletedCount * 2;
+            Turns = 1;
+            Weather = WeatherType.Normal;
+
+            // 根據新的結構初始化不同種類的農夫
+            for (int i = 0; i < initial.GenericFarmers; i++) Farmers.Add(new GenericFarmer());
+            for (int i = 0; i < initial.WheatFarmers; i++) Farmers.Add(new WheatFarmer());
+            for (int i = 0; i < initial.RiceFarmers; i++) Farmers.Add(new RiceFarmer());
+
             for (int i = 0; i < initial.Soldiers; i++) Soldiers.Add(new Soldier());
             for (int i = 0; i < initial.Builders; i++) Builders.Add(new Builder());
-            this.FoesCount = initial.Foes;
-            this.Turns = 1;
-            this.Weather = WeatherType.Normal;
         }
 
-        public (bool IsEnough, int Comsumption) IsFoodEnough(int newFarmers, int newSoldiers, int newBuilders)
+        public (bool IsEnough, int Comsumption) IsFoodEnough(int newGeneric, int newWheat, int newRice, int newSoldiers, int newBuilders)
         {
-            var farmerCost = new Farmer().RecruitmentCost * newFarmers;
-            var soldierCost = new Soldier().RecruitmentCost * newSoldiers;
-            var builderCost = new Builder().RecruitmentCost * newBuilders;
-            var totalCost = farmerCost + soldierCost + builderCost;
+            var totalCost = (newGeneric + newWheat + newRice) * new GenericFarmer().RecruitmentCost +
+                            newSoldiers * new Soldier().RecruitmentCost +
+                            newBuilders * new Builder().RecruitmentCost;
 
-            if (this.Weather == WeatherType.HotSummer)
+            if (Weather == WeatherType.HotSummer)
             {
                 totalCost = (int)(totalCost * 1.5);
             }

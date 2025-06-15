@@ -30,14 +30,42 @@ namespace GameLogic.Model
     /// <summary>
     /// 農夫
     /// </summary>
-    public class Farmer : Role
+    public abstract class Farmer : Role
     {
         public override int FoodConsumption => 1;
 
-        /// <summary>
-        /// 每回合生產 2 份食物
+        /// 農夫正在照料的作物
         /// </summary>
-        public int FoodProduction => 2;
+        public Crop TendedCrop { get; set; }
+
+        /// <summary>
+        /// 根據農夫類型，建立對應的農作物實例
+        /// </summary>
+        public abstract Crop CreateCrop();
+    }
+
+    /// <summary>
+    /// 一般農夫
+    /// </summary>
+    public class GenericFarmer : Farmer
+    {
+        public override Crop CreateCrop() => new GeneralCrop();
+    }
+
+    /// <summary>
+    /// 小麥農夫
+    /// </summary>
+    public class WheatFarmer : Farmer
+    {
+        public override Crop CreateCrop() => new Wheat();
+    }
+
+    /// <summary>
+    /// 稻米農夫
+    /// </summary>
+    public class RiceFarmer : Farmer
+    {
+        public override Crop CreateCrop() => new Rice();
     }
 
     /// <summary>

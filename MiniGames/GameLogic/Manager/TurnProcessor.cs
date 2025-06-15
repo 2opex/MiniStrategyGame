@@ -27,6 +27,8 @@ namespace GameLogic.Manager
                 new PlayerActionPhase(),
                 new ConsumptionPhase(),
                 new CombatPhase(),
+                                new PlantingPhase(),      // <-- 新增：種植階段
+                new GrowthHarvestPhase(), // <-- 替換：生長與收成階段
                 new ProductionPhase(),
                 new EnemySpawningPhase(),
                 new EndOfTurnPhase()

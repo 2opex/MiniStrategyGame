@@ -39,24 +39,7 @@ namespace GameLogic.Manager.Phases
     {
         public void Execute(GameContext context)
         {
-            var input = context.CurrentUserInput;
-            var (IsEnough, Comsumption) = context.IsFoodEnough(input.RecruitedFarmers, input.RecruitedSoldiers, input.RecruitedBuilders);
-            if (IsEnough)
-            {
-                context.Food -= Comsumption;
-                for (int i = 0; i < input.RecruitedFarmers; i++) context.Farmers.Add(new Farmer());
-                for (int i = 0; i < input.RecruitedSoldiers; i++) context.Soldiers.Add(new Soldier());
-                for (int i = 0; i < input.RecruitedBuilders; i++) context.Builders.Add(new Builder());
-                context.AddMessage($"招募了 {input.RecruitedFarmers} 農夫, {input.RecruitedSoldiers} 士兵, {input.RecruitedBuilders} 建築師。花費 {Comsumption} 食物。");
-            }
 
-            context.Farmers.Clear();
-            context.Soldiers.Clear();
-            context.Builders.Clear();
-            for (int i = 0; i < input.AdjustedFarmers; i++) context.Farmers.Add(new Farmer());
-            for (int i = 0; i < input.AdjustedSoldiers; i++) context.Soldiers.Add(new Soldier());
-            for (int i = 0; i < input.AdjustedBuilders; i++) context.Builders.Add(new Builder());
-            context.AddMessage($"角色數量調整為: {input.AdjustedFarmers} 農夫, {input.AdjustedSoldiers} 士兵, {input.AdjustedBuilders} 建築師。");
         }
     }
 
@@ -65,8 +48,6 @@ namespace GameLogic.Manager.Phases
     {
         public void Execute(GameContext context)
         {
-            if (context.RolesCount <= 0) return;
-
         }
     }
 
@@ -78,6 +59,68 @@ namespace GameLogic.Manager.Phases
 
         }
     }
+
+    /// <summary>
+    /// 種植階段：所有閒置的農夫會種下新的作物
+    /// </summary>
+    internal class PlantingPhase : ITurnPhase
+    {
+        public void Execute(GameContext context)
+        {
+            foreach (var farmer in context.Farmers)
+            {
+                // 如果農夫沒有正在照料的作物 (閒置中)
+                if (farmer.TendedCrop == null)
+                {
+                    farmer.TendedCrop = farmer.CreateCrop();
+                    context.AddMessage($"一位農夫種下了新的 {farmer.TendedCrop.Name}。");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// 生長與收成階段：推進作物生長，並收成已成熟的作物
+    /// </summary>
+    internal class GrowthHarvestPhase : ITurnPhase
+    {
+        public void Execute(GameContext context)
+        {
+            foreach (var farmer in context.Farmers)
+            {
+                var crop = farmer.TendedCrop;
+                if (crop != null && !crop.IsMature)
+                {
+                    // 規則：寒冬時，水稻停止生長
+                    if (crop is Rice && context.Weather == WeatherType.ColdWinter)
+                    {
+                        context.AddMessage("寒冬來臨，水稻停止生長。");
+                        continue; // 跳過此作物的生長
+                    }
+
+                    crop.CurrentGrowth++;
+                }
+
+                // 檢查是否成熟並收成
+                if (crop != null && crop.IsMature)
+                {
+                    int finalYield = crop.Yield;
+
+                    // 規則：寒冬時，一般作物產量減半
+                    if (crop is GeneralCrop && context.Weather == WeatherType.ColdWinter)
+                    {
+                        finalYield /= 2;
+                        context.AddMessage($"寒冬影響收成！");
+                    }
+
+                    context.Food += finalYield;
+                    context.AddMessage($"作物 {crop.Name} 已成熟，收穫了 {finalYield} 份食物。");
+                    farmer.TendedCrop = null; // 收成後，農夫變為閒置狀態
+                }
+            }
+        }
+    }
+
 
     // --- 階段 4: 生產 ---
     internal class ProductionPhase : ITurnPhase

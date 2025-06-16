@@ -14,6 +14,11 @@ namespace GameLogic.Model
         /// </summary>
         public abstract int CombatPower { get; }
 
+        /// <summary>
+        /// 當前回合的實際戰鬥力，可能會因為特殊能力而改變
+        /// </summary>
+        public int CurrentTurnCombatPower { get; set; }
+
         // 新增一個屬性來標記敵人是否為當回合新生成的
         public bool IsNewlySpawned { get; set; } = true;
 
@@ -54,6 +59,12 @@ namespace GameLogic.Model
             {
                 resourceManager.SpendFood(stolenAmount);
                 context.AddMessage($"{Name} 偷走了 {stolenAmount} 份食物！");
+                // 成功偷竊後，本回合不再參與戰鬥
+                this.CurrentTurnCombatPower = 0;
+            }
+            else
+            {
+                context.AddMessage($"{Name} 因找不到食物可偷，轉而進行攻擊！");
             }
         }
     }
@@ -78,6 +89,12 @@ namespace GameLogic.Model
                 int bedsPerBuilding = context.RelicsManager.ActiveRelics.OfType<IronWallRelic>().Any() ? 3 : 2;
                 resourceManager.UpdateBeds(bedsPerBuilding);
                 context.AddMessage($"{Name} 摧毀了 {buildingsToDestroy} 棟房屋！");
+                // 成功破壞後，本回合不再參與戰鬥
+                this.CurrentTurnCombatPower = 0;
+            }
+            else
+            {
+                context.AddMessage($"{Name} 因找不到房屋可拆，轉而進行攻擊！");
             }
         }
     }

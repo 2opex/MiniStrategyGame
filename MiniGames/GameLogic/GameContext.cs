@@ -9,7 +9,7 @@ namespace GameLogic
     /// <summary>
     /// 遊戲狀態的彙總根 (Aggregation Root)
     /// </summary>
-    internal class GameContext : IGameContext
+    public class GameContext : IGameContext
     {
         // 持有所有管理器的實例
         internal IGameStateManager GameStateManager { get; }

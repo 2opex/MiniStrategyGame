@@ -93,6 +93,12 @@ namespace GameLogic.Manager.Phases
         {
             if (!context.EnemiesManager.Enemies.Any()) return;
 
+            // 在敵人行動前，重置他們當前回合的戰鬥力為其基礎戰鬥力
+            foreach (var enemy in context.EnemiesManager.Enemies)
+            {
+                enemy.CurrentTurnCombatPower = enemy.CombatPower;
+            }
+
             var oldRelicHolders = context.EnemiesManager.Enemies.OfType<RelicHolder>().Where(e => !e.IsNewlySpawned).ToList();
             if (oldRelicHolders.Any())
             {
@@ -166,16 +172,16 @@ namespace GameLogic.Manager.Phases
             if (extraPowerFromRelic > 0) context.AddMessage("在聖物的加持下，士兵們的戰力大增！");
 
             int playerAttackPower = context.PopulationManager.Soldiers.Sum(s => s.KillPower) + extraPowerFromRelic;
-            int totalEnemyCombatPower = context.EnemiesManager.Enemies.Sum(e => e.CombatPower);
+            int totalEnemyCombatPower = context.EnemiesManager.Enemies.Sum(e => e.CurrentTurnCombatPower);
             context.AddMessage($"我方士兵總戰力為 {playerAttackPower}，敵方總戰力為 {totalEnemyCombatPower}。");
 
             var sortedEnemies = context.EnemiesManager.Enemies.OrderBy(e => e.CombatPower).ToList();
             int defeatedPower = 0;
             foreach (var enemy in sortedEnemies)
             {
-                if (defeatedPower + enemy.CombatPower <= playerAttackPower)
+                if (defeatedPower + enemy.CurrentTurnCombatPower <= playerAttackPower)
                 {
-                    defeatedPower += enemy.CombatPower;
+                    defeatedPower += enemy.CurrentTurnCombatPower;
                     context.EnemiesManager.RemoveEnemy(enemy);
                     context.AddMessage($"擊敗了一名 {enemy.Name}！");
 
@@ -189,7 +195,7 @@ namespace GameLogic.Manager.Phases
                 }
             }
 
-            int remainingEnemyPowerForCasualty = context.EnemiesManager.Enemies.Sum(e => e.CombatPower);
+            int remainingEnemyPowerForCasualty = context.EnemiesManager.Enemies.Sum(e => e.CurrentTurnCombatPower);
             if (remainingEnemyPowerForCasualty > 0)
             {
                 context.AddMessage($"敵人反擊！我方承受 {remainingEnemyPowerForCasualty} 點戰力衝擊...");
@@ -230,7 +236,6 @@ namespace GameLogic.Manager.Phases
             {
                 if (farmer.TendedCrop == null)
                 {
-                    // For now, keep factory logic here. It can be moved to a dedicated factory class.
                     farmer.TendedCrop = CropFactory.CreateCrop(farmer);
                     context.AddMessage($"一位農夫種下了新的 {farmer.TendedCrop.Name}。");
                 }

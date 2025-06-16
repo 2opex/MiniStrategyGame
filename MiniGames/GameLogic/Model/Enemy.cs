@@ -43,7 +43,7 @@ namespace GameLogic.Model
         public override string Name => "食物盜賊";
         public override int CombatPower => 1;
 
-        internal override void ExecuteSpecialAbility(GameLogic.GameContext context)
+        internal override void ExecuteSpecialAbility(GameContext context)
         {
             int foodToSteal = 3;
             // 改為透過 ResourceManager 存取和修改資源
@@ -66,7 +66,7 @@ namespace GameLogic.Model
         public override string Name => "房屋破壞者";
         public override int CombatPower => 2;
 
-        internal override void ExecuteSpecialAbility(GameLogic.GameContext context)
+        internal override void ExecuteSpecialAbility(GameContext context)
         {
             int buildingsToDestroy = 1;
             var resourceManager = context.ResourcesManager;
@@ -74,8 +74,7 @@ namespace GameLogic.Model
             if (resourceManager.BuildingCompletedCount >= buildingsToDestroy)
             {
                 resourceManager.DestroyBuildings(buildingsToDestroy);
-                // 摧毀後，需要更新床位數。這裡假設被摧毀的房屋都是提供標準床位(2)
-                // 如果有聖物影響，這部分邏輯會更複雜，但目前這樣處理是合理的。
+
                 int bedsPerBuilding = context.RelicsManager.ActiveRelics.OfType<IronWallRelic>().Any() ? 3 : 2;
                 resourceManager.UpdateBeds(bedsPerBuilding);
                 context.AddMessage($"{Name} 摧毀了 {buildingsToDestroy} 棟房屋！");

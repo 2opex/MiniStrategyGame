@@ -1,4 +1,7 @@
-﻿namespace GameLogic.Model
+﻿using System;
+using System.Linq;
+
+namespace GameLogic.Model
 {
     /// <summary>
     /// 代表所有敵人的抽象基礎類別
@@ -40,13 +43,16 @@
         public override string Name => "食物盜賊";
         public override int CombatPower => 1;
 
-        internal override void ExecuteSpecialAbility(GameContext context)
+        internal override void ExecuteSpecialAbility(GameLogic.GameContext context)
         {
             int foodToSteal = 3;
-            int stolenAmount = System.Math.Min(context.Food, foodToSteal);
+            // 改為透過 ResourceManager 存取和修改資源
+            var resourceManager = context.ResourcesManager;
+            int stolenAmount = Math.Min(resourceManager.Food, foodToSteal);
+
             if (stolenAmount > 0)
             {
-                context.Food -= stolenAmount;
+                resourceManager.SpendFood(stolenAmount);
                 context.AddMessage($"{Name} 偷走了 {stolenAmount} 份食物！");
             }
         }
@@ -60,13 +66,18 @@
         public override string Name => "房屋破壞者";
         public override int CombatPower => 2;
 
-        internal override void ExecuteSpecialAbility(GameContext context)
+        internal override void ExecuteSpecialAbility(GameLogic.GameContext context)
         {
             int buildingsToDestroy = 1;
-            if (context.BuildingCompletedCount >= buildingsToDestroy)
+            var resourceManager = context.ResourcesManager;
+
+            if (resourceManager.BuildingCompletedCount >= buildingsToDestroy)
             {
-                context.BuildingCompletedCount -= buildingsToDestroy;
-                context.Beds = context.BuildingCompletedCount * 2;
+                resourceManager.DestroyBuildings(buildingsToDestroy);
+                // 摧毀後，需要更新床位數。這裡假設被摧毀的房屋都是提供標準床位(2)
+                // 如果有聖物影響，這部分邏輯會更複雜，但目前這樣處理是合理的。
+                int bedsPerBuilding = context.RelicsManager.ActiveRelics.OfType<IronWallRelic>().Any() ? 3 : 2;
+                resourceManager.UpdateBeds(bedsPerBuilding);
                 context.AddMessage($"{Name} 摧毀了 {buildingsToDestroy} 棟房屋！");
             }
         }

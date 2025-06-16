@@ -45,9 +45,11 @@
   <ItemGroup>
     <Compile Include="GameContext.cs" />
     <Compile Include="Interface\IGameContext.cs" />
+    <Compile Include="Interface\IGameStateManager.cs" />
     <Compile Include="Interface\IPlanter.cs" />
     <Compile Include="Interface\ITurnPhase.cs" />
     <Compile Include="Manager\CropFactory.cs" />
+    <Compile Include="Manager\GameStateManager.cs" />
     <Compile Include="Model\Character.cs" />
     <Compile Include="Model\Crop.cs" />
     <Compile Include="Model\Enemy.cs" />

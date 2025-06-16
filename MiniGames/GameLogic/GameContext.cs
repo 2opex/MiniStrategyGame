@@ -7,74 +7,51 @@ using System.Collections.Generic;
 namespace GameLogic
 {
     /// <summary>
-    /// 遊戲狀態的具體實作 (Internal，僅供 GameLogic 內部使用)
+    /// 遊戲狀態的彙總根 (Aggregation Root)
     /// </summary>
     internal class GameContext : IGameContext
     {
-        public int Food { get; set; }
-        public int Beds { get; set; }
-        public int BuildingCompletedCount { get; set; }
-        public int RolesCount => Farmers.Count + Soldiers.Count + Builders.Count;
-        public int FarmersCount => Farmers.Count;
-        public int SoldiersCount => Soldiers.Count;
-        public int BuildersCount => Builders.Count;
-        public int FoesCount => Enemies.Count;
-        internal List<Enemy> Enemies { get; } = [];
-        public int Turns { get; set; }
-        public bool GameFinished { get; set; }
-        public WeatherType Weather { get; set; }
-
-        private readonly List<string> _messages = [];
-        public IReadOnlyCollection<string> Messages => _messages.AsReadOnly();
-
-        internal List<Farmer> Farmers { get; } = [];
-        internal List<Soldier> Soldiers { get; } = [];
-        internal List<Builder> Builders { get; } = [];
-        internal List<Relic> ActiveRelics { get; } = [];
-        internal List<Relic> PendingRelics { get; } = [];
+        // 持有所有管理器的實例
+        internal IGameStateManager GameStateManager { get; }
+        internal IMessageManager MessagesManager { get; }
+        internal IResourceManager ResourcesManager { get; }
+        internal IPopulationManager PopulationManager { get; }
+        internal IEnemyManager EnemiesManager { get; }
+        internal IRelicManager RelicsManager { get; }
 
         internal TurnProcessor.UserInput CurrentUserInput { get; set; }
 
-
         public GameContext(TurnProcessor.InitialSettingUps initial)
         {
-            Food = initial.Food;
-            BuildingCompletedCount = initial.Buildings;
-            Beds = BuildingCompletedCount * 2;
-            Turns = 1;
-            Weather = WeatherType.Normal;
-
-            // 根據新的結構初始化不同種類的農夫
-            for (int i = 0; i < initial.GenericFarmers; i++) Farmers.Add(new GenericFarmer());
-            for (int i = 0; i < initial.WheatFarmers; i++) Farmers.Add(new WheatFarmer());
-            for (int i = 0; i < initial.RiceFarmers; i++) Farmers.Add(new RiceFarmer());
-
-            for (int i = 0; i < initial.Soldiers; i++) Soldiers.Add(new Soldier());
-            for (int i = 0; i < initial.Builders; i++) Builders.Add(new Builder());
+            // 在建構式中，初始化所有的管理器
+            GameStateManager = new GameStateManager();
+            MessagesManager = new MessageManager(GameStateManager);
+            ResourcesManager = new ResourceManager(initial);
+            PopulationManager = new PopulationManager(initial);
+            EnemiesManager = new EnemyManager();
+            RelicsManager = new RelicManager();
         }
+
+        // 實作 IGameContext 介面，將請求委派給對應的管理器
+        public int Food => ResourcesManager.Food;
+        public int Beds => ResourcesManager.Beds;
+        public int BuildingCompletedCount => ResourcesManager.BuildingCompletedCount;
+        public int RolesCount => PopulationManager.TotalRoles;
+        public int FarmersCount => PopulationManager.Farmers.Count;
+        public int SoldiersCount => PopulationManager.Soldiers.Count;
+        public int BuildersCount => PopulationManager.Builders.Count;
+        public int FoesCount => EnemiesManager.Enemies.Count;
+        public int Turns => GameStateManager.Turns;
+        public bool GameFinished => GameStateManager.IsGameFinished;
+        public WeatherType Weather => GameStateManager.Weather;
+        public IReadOnlyCollection<string> Messages => MessagesManager.Messages;
 
         public (bool IsEnough, int Comsumption) IsFoodEnough(int newGeneric, int newWheat, int newRice, int newSoldiers, int newBuilders)
         {
-            var totalCost = (newGeneric + newWheat + newRice) * new GenericFarmer().RecruitmentCost +
-                            newSoldiers * new Soldier().RecruitmentCost +
-                            newBuilders * new Builder().RecruitmentCost;
-
-            if (Weather == WeatherType.HotSummer)
-            {
-                totalCost = (int)(totalCost * 1.5);
-            }
-
-            return (Food >= totalCost, totalCost);
+            return ResourcesManager.IsFoodEnoughForRecruitment(newGeneric, newWheat, newRice, newSoldiers, newBuilders, GameStateManager.Weather == WeatherType.HotSummer);
         }
 
-        internal void AddMessage(string message)
-        {
-            _messages.Add($"[回合 {Turns}] {message}");
-        }
-
-        internal void ClearMessages()
-        {
-            _messages.Clear();
-        }
+        internal void AddMessage(string message) => MessagesManager.AddMessage(message);
+        internal void ClearMessages() => MessagesManager.ClearMessages();
     }
 }

@@ -66,9 +66,15 @@ namespace GameLogic.Manager.Phases
         {
             var input = context.CurrentUserInput;
 
+            // --- 處理角色數量調整 ---
+            context.PopulationManager.ClearAndRepopulate(input.AdjustedGenericFarmers, input.AdjustedWheatFarmers, input.AdjustedRiceFarmers, input.AdjustedSoldiers, input.AdjustedBuilders);
+            context.AddMessage($"角色數量已調整。");
+
             // --- 處理招募 ---
             var (isEnough, comsumption) = context.IsFoodEnough(input.RecruitedGenericFarmers, input.RecruitedWheatFarmers, input.RecruitedRiceFarmers, input.RecruitedSoldiers, input.RecruitedBuilders);
-            if (isEnough)
+
+            // 只有在食物足夠且玩家有招募意圖時才執行
+            if (isEnough && comsumption > 0)
             {
                 context.ResourcesManager.SpendFood(comsumption);
                 for (int i = 0; i < input.RecruitedGenericFarmers; i++) context.PopulationManager.AddFarmer(new GenericFarmer());
@@ -78,10 +84,6 @@ namespace GameLogic.Manager.Phases
                 for (int i = 0; i < input.RecruitedBuilders; i++) context.PopulationManager.AddBuilder(new Builder());
                 context.AddMessage($"招募完成，花費 {comsumption} 食物。");
             }
-
-            // --- 處理角色數量調整 ---
-            context.PopulationManager.ClearAndRepopulate(input.AdjustedGenericFarmers, input.AdjustedWheatFarmers, input.AdjustedRiceFarmers, input.AdjustedSoldiers, input.AdjustedBuilders);
-            context.AddMessage($"角色數量已調整。");
         }
     }
 

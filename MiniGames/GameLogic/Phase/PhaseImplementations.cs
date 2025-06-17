@@ -13,12 +13,11 @@ namespace GameLogic.Manager.Phases
         public void Execute(GameContext context)
         {
             // 1. 啟動等待中的聖物
-            var pendingRelicsCount = context.RelicsManager.ActiveRelics.Count(r => r.Duration == 3); // A simple way to check for newly added relics
+            var pendingRelicsCount = context.RelicsManager.ActiveRelics.Count();
             context.RelicsManager.ActivatePendingRelics();
             if (context.RelicsManager.ActiveRelics.Count > pendingRelicsCount && pendingRelicsCount != context.RelicsManager.ActiveRelics.Count)
             {
-                var newRelic = context.RelicsManager.ActiveRelics.Last();
-                context.AddMessage($"聖物 {newRelic.Name} 的力量開始湧現！");
+                context.AddMessage($"聖物的力量開始湧現！");
             }
 
             // 2. 處理已生效聖物的持續時間
